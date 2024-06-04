@@ -59,50 +59,50 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Download Artifacts
+    - name: Download Ubuntu Artifact
       uses: actions/download-artifact@v2
       with:
         name: ubuntu-latest-executable
-        path: ubuntu-latest/
-    
-    - name: Download Artifacts
+        path: ./ubuntu-latest
+
+    - name: Download macOS Artifact
       uses: actions/download-artifact@v2
       with:
         name: macos-latest-executable
-        path: macos-latest/
-    
-    - name: Download Artifacts
+        path: ./macos-latest
+
+    - name: Download Windows Artifact
       uses: actions/download-artifact@v2
       with:
         name: windows-latest-executable
-        path: windows-latest/
+        path: ./windows-latest
 
-    - name: Upload Release Assets
+    - name: Upload Ubuntu Release Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ubuntu-latest/dist/main
+        asset_path: ./ubuntu-latest/main
         asset_name: main-ubuntu
         asset_content_type: application/octet-stream
 
-    - name: Upload Release Assets
+    - name: Upload macOS Release Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: macos-latest/dist/main
+        asset_path: ./macos-latest/main
         asset_name: main-macos
         asset_content_type: application/octet-stream
 
-    - name: Upload Release Assets
+    - name: Upload Windows Release Asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: windows-latest/dist/main.exe
+        asset_path: ./windows-latest/main.exe
         asset_name: main-windows
         asset_content_type: application/octet-stream
