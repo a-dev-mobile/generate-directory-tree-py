@@ -1,4 +1,5 @@
-name: Build and Release
+
+name: Build and Release Executables
 
 on:
   push:
@@ -9,8 +10,11 @@ on:
       - main
 
 jobs:
-  build-ubuntu:
-    runs-on: ubuntu-latest
+  build-and-release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
     - name: Checkout repository
@@ -25,184 +29,34 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller gitpython python-gitlab
-
     - name: Build executable
       run: |
         pyinstaller --onefile scripts/main.py
-
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ubuntu-executable
+        name: ${{ matrix.os }}-executable
         path: dist/
 
-  build-macos:
-    runs-on: macos-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
-        python-version: '3.x'
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyinstaller gitpython python-gitlab
-
-    - name: Build executable
-      run: |
-        pyinstaller --onefile scripts/main.py
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: macos-executable
-        path: dist/
-
-  build-windows:
-    runs-on: windows-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyinstaller gitpython python-gitlab
-
-    - name: Build executable
-      run: |
-        pyinstaller --onefile scripts/main.py
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-executable
-        path: dist/
-
-  release-ubuntu:
-    runs-on: ubuntu-latest
-    needs: build-ubuntu
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Create or Update GitHub Release
-      id: create_or_update_release
-      run: |
-        release_id=$(curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref }} \
-            | jq -r '.id')
-        if [ "$release_id" = "null" ]; then
-          curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
-              -X POST \
-              -d "{\"tag_name\": \"${{ github.ref }}\", \"name\": \"Release ${{ github.ref }}\", \"draft\": false, \"prerelease\": false}" \
-              https://api.github.com/repos/${{ github.repository }}/releases
-        else
-          echo "Release already exists for tag ${release_id}"
-        fi
-
-    - name: Download Ubuntu Artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: ubuntu-executable
-        path: ./ubuntu
-
-    - name: Upload Ubuntu Release Asset
+    - name: Upload Release Asset
+      if: startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_or_update_release.outputs.upload_url }}
-        asset_path: ./ubuntu/main
-        asset_name: main-ubuntu
-        asset_content_type: application/octet-stream
-
-  release-macos:
-    runs-on: ubuntu-latest
-    needs: build-macos
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Create or Update GitHub Release
-      id: create_or_update_release
-      run: |
-        release_id=$(curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref }} \
-            | jq -r '.id')
-        if [ "$release_id" = "null" ]; then
-          curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
-              -X POST \
-              -d "{\"tag_name\": \"${{ github.ref }}\", \"name\": \"Release ${{ github.ref }}\", \"draft\": false, \"prerelease\": false}" \
-              https://api.github.com/repos/${{ github.repository }}/releases
-        else
-          echo "Release already exists for tag ${release_id}"
-        fi
-
-    - name: Download macOS Artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: macos-executable
-        path: ./macos
-
-    - name: Upload macOS Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_or_update_release.outputs.upload_url }}
-        asset_path: ./macos/main
-        asset_name: main-macos
-        asset_content_type: application/octet-stream
-
-  release-windows:
-    runs-on: ubuntu-latest
-    needs: build-windows
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Create or Update GitHub Release
-      id: create_or_update_release
-      run: |
-        release_id=$(curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref }} \
-            | jq -r '.id')
-        if [ "$release_id" = "null" ]; then
-          curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
-              -X POST \
-              -d "{\"tag_name\": \"${{ github.ref }}\", \"name\": \"Release ${{ github.ref }}\", \"draft\": false, \"prerelease\": false}" \
-              https://api.github.com/repos/${{ github.repository }}/releases
-        else
-          echo "Release already exists for tag ${release_id}"
-        fi
-
-    - name: Download Windows Artifact
-      uses: actions/download-artifact@v2
-      with:
-        name: windows-executable
-        path: ./windows
-
-    - name: Upload Windows Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_or_update_release.outputs.upload_url }}
-        asset_path: ./windows/main.exe
-        asset_name: main-windows
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/main
+        asset_name: main-${{ matrix.os }}
         asset_content_type: application/octet-stream
