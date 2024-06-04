@@ -98,17 +98,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Create GitHub Release
-      if: startsWith(github.ref, 'refs/tags/')
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+    - name: Create or Update GitHub Release
+      id: create_or_update_release
+      run: |
+        release_id=$(curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref }} \
+            | jq -r '.id')
+        if [ "$release_id" = "null" ]; then
+          curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
+              -X POST \
+              -d "{\"tag_name\": \"${{ github.ref }}\", \"name\": \"Release ${{ github.ref }}\", \"draft\": false, \"prerelease\": false}" \
+              https://api.github.com/repos/${{ github.repository }}/releases
+        else
+          echo "Release already exists for tag ${release_id}"
+        fi
 
     - name: Download Ubuntu Artifact
       uses: actions/download-artifact@v2
@@ -121,7 +124,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ steps.create_or_update_release.outputs.upload_url }}
         asset_path: ./ubuntu/main
         asset_name: main-ubuntu
         asset_content_type: application/octet-stream
@@ -134,17 +137,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Create GitHub Release
-      if: startsWith(github.ref, 'refs/tags/')
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+    - name: Create or Update GitHub Release
+      id: create_or_update_release
+      run: |
+        release_id=$(curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref }} \
+            | jq -r '.id')
+        if [ "$release_id" = "null" ]; then
+          curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
+              -X POST \
+              -d "{\"tag_name\": \"${{ github.ref }}\", \"name\": \"Release ${{ github.ref }}\", \"draft\": false, \"prerelease\": false}" \
+              https://api.github.com/repos/${{ github.repository }}/releases
+        else
+          echo "Release already exists for tag ${release_id}"
+        fi
 
     - name: Download macOS Artifact
       uses: actions/download-artifact@v2
@@ -157,7 +163,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ steps.create_or_update_release.outputs.upload_url }}
         asset_path: ./macos/main
         asset_name: main-macos
         asset_content_type: application/octet-stream
@@ -170,17 +176,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Create GitHub Release
-      if: startsWith(github.ref, 'refs/tags/')
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+    - name: Create or Update GitHub Release
+      id: create_or_update_release
+      run: |
+        release_id=$(curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.ref }} \
+            | jq -r '.id')
+        if [ "$release_id" = "null" ]; then
+          curl -s -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
+              -X POST \
+              -d "{\"tag_name\": \"${{ github.ref }}\", \"name\": \"Release ${{ github.ref }}\", \"draft\": false, \"prerelease\": false}" \
+              https://api.github.com/repos/${{ github.repository }}/releases
+        else
+          echo "Release already exists for tag ${release_id}"
+        fi
 
     - name: Download Windows Artifact
       uses: actions/download-artifact@v2
@@ -193,7 +202,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ steps.create_or_update_release.outputs.upload_url }}
         asset_path: ./windows/main.exe
         asset_name: main-windows
         asset_content_type: application/octet-stream
