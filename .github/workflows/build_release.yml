@@ -33,10 +33,14 @@ jobs:
       run: |
         pyinstaller --onefile scripts/main.py
 
+    - name: Set Artifact Name
+      id: set_artifact_name
+      run: echo "artifact_name=${{ matrix.os }}-generate-directory-tree-${{ github.ref }}" | sed 's/refs\/tags\///g' >> $GITHUB_ENV
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.os }}-generate-directory-tree-${{ github.ref }}
+        name: ${{ env.artifact_name }}
         path: dist/
 
   release:
@@ -58,10 +62,14 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Download Artifacts
+    - name: Set Artifact Name
+      id: set_artifact_name
+      run: echo "artifact_name=${{ matrix.os }}-generate-directory-tree-${{ github.ref }}" | sed 's/refs\/tags\///g' >> $GITHUB_ENV
+
+    - name: Download Ubuntu Artifact
       uses: actions/download-artifact@v4
       with:
-        name: ubuntu-latest-generate-directory-tree-${{ github.ref }}
+        name: ubuntu-latest-generate-directory-tree-${{ env.artifact_name }}
         path: dist/ubuntu-latest
 
     - name: Upload Ubuntu Release Asset
@@ -72,13 +80,13 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist/ubuntu-latest/main
-        asset_name: generate-directory-tree-ubuntu-${{ github.ref }}
+        asset_name: generate-directory-tree-ubuntu-${{ env.artifact_name }}
         asset_content_type: application/octet-stream
 
     - name: Download MacOS Artifact
       uses: actions/download-artifact@v4
       with:
-        name: macos-latest-generate-directory-tree-${{ github.ref }}
+        name: macos-latest-generate-directory-tree-${{ env.artifact_name }}
         path: dist/macos-latest
 
     - name: Upload MacOS Release Asset
@@ -89,13 +97,13 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist/macos-latest/main
-        asset_name: generate-directory-tree-macos-${{ github.ref }}
+        asset_name: generate-directory-tree-macos-${{ env.artifact_name }}
         asset_content_type: application/octet-stream
 
     - name: Download Windows Artifact
       uses: actions/download-artifact@v4
       with:
-        name: windows-latest-generate-directory-tree-${{ github.ref }}
+        name: windows-latest-generate-directory-tree-${{ env.artifact_name }}
         path: dist/windows-latest
 
     - name: Upload Windows Release Asset
@@ -106,5 +114,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: dist/windows-latest/main.exe
-        asset_name: generate-directory-tree-windows-${{ github.ref }}
+        asset_name: generate-directory-tree-windows-${{ env.artifact_name }}
         asset_content_type: application/octet-stream
