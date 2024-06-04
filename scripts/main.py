@@ -108,6 +108,12 @@ def main():
         output += "Directory Structure:\n\n"
         output += directory_structure
 
+        if args.extensions:
+            logger.info("Reading files with specified extensions")
+            file_content = read_files_with_extensions(args.path, args.extensions, exclude_patterns)
+            output += "\nFiles Content:\n"
+            output += file_content
+
         dir_file_count = []
         for root, dirs, files in os.walk(args.path):
             # Check if directory matches exclude patterns
@@ -127,12 +133,6 @@ def main():
 
         output += "\nDirectory File Count:\n\n"
         output += str(table)
-
-        if args.extensions:
-            logger.info("Reading files with specified extensions")
-            file_content = read_files_with_extensions(args.path, args.extensions, exclude_patterns)
-            output += "\nFiles Content:\n"
-            output += file_content
 
         if args.output_file is not None:
             if args.output_file == "":
