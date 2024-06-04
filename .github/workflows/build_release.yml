@@ -32,15 +32,6 @@ jobs:
     - name: Build executable
       run: |
         pyinstaller --onefile scripts/main.py
-    - name: Rename executable
-      if: matrix.os == 'ubuntu-latest'
-      run: mv dist/main dist/main.linux
-    - name: Rename executable
-      if: matrix.os == 'macos-latest'
-      run: mv dist/main dist/main.mac
-    - name: Rename executable
-      if: matrix.os == 'windows-latest'
-      run: mv dist/main.exe dist/main.windows.exe
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
@@ -83,7 +74,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/ubuntu-latest/main.linux
+        asset_path: dist/ubuntu-latest/main
         asset_name: generate-directory-tree-${{ steps.get_version.outputs.version }}.linux
         asset_content_type: application/octet-stream
 
@@ -100,7 +91,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/macos-latest/main.mac
+        asset_path: dist/macos-latest/main
         asset_name: generate-directory-tree-${{ steps.get_version.outputs.version }}.mac
         asset_content_type: application/octet-stream
 
@@ -117,6 +108,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/windows-latest/main.windows.exe
-        asset_name: generate-directory-tree-${{ steps.get_version.outputs.version }}.windows
+        asset_path: dist/windows-latest/main.exe
+        asset_name: generate-directory-tree-${{ steps.get_version.outputs.version }}.windows.exe
         asset_content_type: application/octet-stream
+
+
