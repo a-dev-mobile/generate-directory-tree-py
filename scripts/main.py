@@ -23,8 +23,8 @@ def setup_logging(log_file, directory, log_level):
 def count_files_in_directory(path, exclude_patterns):
     count = 0
     for root, dirs, files in os.walk(path):
-        dirs[:] = [d for d in dirs if not any(re.search(pattern, os.path.join(root, d)) for pattern in exclude_patterns)]
-        files = [f for f in files if not any(re.search(pattern, os.path.join(root, f)) for pattern in exclude_patterns)]
+        dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
+        files = [f for f in files if not any(re.search(f"^{pattern}$", os.path.join(root, f)) for pattern in exclude_patterns)]
         count += len(files)
     logger.debug(f"Counted {count} files in {path}")
     return count
@@ -34,7 +34,7 @@ def generate_directory_structure(path, exclude_patterns, indent="", is_last=True
     items = sorted(os.listdir(path))
     for index, item in enumerate(items):
         item_path = os.path.join(path, item)
-        if any(re.search(pattern, item_path) for pattern in exclude_patterns):
+        if any(re.search(f"^{pattern}$", item_path) for pattern in exclude_patterns):
             logger.debug(f"Excluded {item_path}")
             continue
         connector = "└── " if index == len(items) - 1 else "├── "
@@ -50,12 +50,11 @@ def generate_directory_structure(path, exclude_patterns, indent="", is_last=True
 def read_files_with_extensions(base_path, extensions, exclude_patterns):
     content = ""
     for root, dirs, files in os.walk(base_path):
-        # Check if directory or file matches exclude patterns
-        dirs[:] = [d for d in dirs if not any(re.search(pattern, os.path.join(root, d)) for pattern in exclude_patterns)]
+        dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
         for file in files:
             if any(file.endswith(ext) for ext in extensions):
                 file_path = os.path.join(root, file)
-                if not any(re.search(pattern, file_path) for pattern in exclude_patterns):
+                if not any(re.search(f"^{pattern}$", file_path) for pattern in exclude_patterns):
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             relative_path = os.path.relpath(file_path, base_path)
@@ -117,7 +116,7 @@ def main():
         dir_file_count = []
         for root, dirs, files in os.walk(args.path):
             # Check if directory matches exclude patterns
-            dirs[:] = [d for d in dirs if not any(re.search(pattern, os.path.join(root, d)) for pattern in exclude_patterns)]
+            dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
             for d in dirs:
                 dir_path = os.path.join(root, d)
                 file_count = count_files_in_directory(dir_path, exclude_patterns)
