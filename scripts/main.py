@@ -47,14 +47,24 @@ def generate_directory_structure(path, exclude_patterns, indent="", is_last=True
     logger.debug(f"Generated structure for {path}")
     return structure
 
-def read_files_with_extensions(base_path, extensions, exclude_patterns):
+def read_files_with_names_or_extensions(base_path, names_or_extensions, exclude_patterns):
     content = ""
     for root, dirs, files in os.walk(base_path):
         dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
         for file in files:
-            if any(file.endswith(ext) for ext in extensions):
-                file_path = os.path.join(root, file)
-                if not any(re.search(f"^{pattern}$", file_path) for pattern in exclude_patterns):
+            file_path = os.path.join(root, file)
+            if not any(re.search(f"^{pattern}$", file_path) for pattern in exclude_patterns):
+                if names_or_extensions:
+                    if any(file == name for name in names_or_extensions) or any(file.endswith(ext) for ext in names_or_extensions):
+                        try:
+                            with open(file_path, 'r', encoding='utf-8') as f:
+                                relative_path = os.path.relpath(file_path, base_path)
+                                logger.debug(f"Reading content of {file_path}")
+                                content += f"\n{'='*40}\nContent of {relative_path}:\n{'='*40}\n"
+                                content += f.read() + "\n"
+                        except Exception as e:
+                            logger.error(f"Failed to read {file_path}: {e}")
+                else:
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             relative_path = os.path.relpath(file_path, base_path)
@@ -69,7 +79,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate directory structure")
     parser.add_argument("--path", required=True, help="Path to the directory")
     parser.add_argument("--exclude", nargs='*', default=[], help="List of regex patterns to exclude directories/files")
-    parser.add_argument("--extensions", nargs='*', default=[], help="List of file extensions to include content from")
+    parser.add_argument("--file-names", nargs='*', default=[], help="List of specific file names or extensions to include content from")
     parser.add_argument("--log-file", nargs='?', const="", help="File to save log to, if not specified logs to console, if specified but empty logs to default file in the parsed directory")
     parser.add_argument("--log-level", default="INFO", help="Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
     parser.add_argument("--output-file", nargs='?', const="", help="File to save output to, if specified but empty saves to default file in the parsed directory")
@@ -84,8 +94,8 @@ def main():
     logger = setup_logging(log_file, directory, args.log_level)
 
     logger.info(f"Selected path for scanning: {args.path}")
-    if args.extensions:
-        logger.info(f"File extensions to include: {', '.join(args.extensions)}")
+    if args.file_names:
+        logger.info(f"File names or extensions to include: {', '.join(args.file_names)}")
 
     if not os.path.isdir(args.path):
         logger.error(f"{args.path} is not a valid directory")
@@ -107,9 +117,9 @@ def main():
         output += "Directory Structure:\n\n"
         output += directory_structure
 
-        if args.extensions:
-            logger.info("Reading files with specified extensions")
-            file_content = read_files_with_extensions(args.path, args.extensions, exclude_patterns)
+        if args.file_names:
+            logger.info("Reading files with specified names or extensions")
+            file_content = read_files_with_names_or_extensions(args.path, args.file_names, exclude_patterns)
             output += "\nFiles Content:\n"
             output += file_content
 

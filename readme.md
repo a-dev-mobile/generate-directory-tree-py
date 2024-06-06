@@ -1,6 +1,6 @@
 # Directory Structure Generator
 
-This script generates a directory structure, counts files in directories with specified exclusion patterns, and can read content from files with specified extensions. Additionally, it supports logging of its actions and saving output to a file.
+This script generates a directory structure, counts files in directories with specified exclusion patterns, and can read content from files with specified names or extensions. Additionally, it supports logging of its actions and saving output to a file.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ The script can be used to generate a directory structure, count files, and read 
 
 - `--path`: Path to the directory (required).
 - `--exclude`: List of regex patterns to exclude directories/files (optional).
-- `--extensions`: List of file extensions to include content from (optional).
+- `--file-names`: List of specific file names or extensions to include content from (optional).
 - `--log-file`: File to save log to. If not specified, logs to console. If specified but empty, logs to a default file in the parsed directory (optional).
 - `--log-level`: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL) (optional).
 - `--output-file`: File to save output to. If specified but empty, saves to a default file in the parsed directory (optional).
@@ -34,9 +34,9 @@ The script can be used to generate a directory structure, count files, and read 
 
     python directory_structure.py --path /path/to/directory --exclude 'pattern1' 'pattern2'
 
-**3\. Read content from files with specified extensions:**
+**3\. Read content from files with specified names or extensions:**
 
-    python directory_structure.py --path /path/to/directory --extensions .txt .md
+    python directory_structure.py --path /path/to/directory --file-names file1.txt file2.md .py
 
 **4\. Save log to a file:**
 
@@ -48,13 +48,13 @@ The script can be used to generate a directory structure, count files, and read 
 
 ### Full Example
 
-    python directory_structure.py --path /path/to/directory --exclude 'pattern1' 'pattern2' --extensions .txt .md --log-file --output-file
+python directory_structure.py --path /path/to/directory --exclude 'pattern1' 'pattern2' --file-names file1.txt file2.md .py --log-file --output-file
 
 This will:
 
 - Generate the directory structure for `/path/to/directory`.
 - Exclude files and directories matching `pattern1` and `pattern2`.
-- Include contents of `.txt` and `.md` files.
+- Include contents of files named file1.txt and file2.md, and files with the .py extension.
 - Save logs to a default file in the directory.
 - Save output to a default file in the directory.
 
