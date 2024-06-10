@@ -83,6 +83,7 @@ def main():
     parser.add_argument("--log-file", nargs='?', const="", help="File to save log to, if not specified logs to console, if specified but empty logs to default file in the parsed directory")
     parser.add_argument("--log-level", default="INFO", help="Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
     parser.add_argument("--output-file", nargs='?', const="", help="File to save output to, if specified but empty saves to default file in the parsed directory")
+    parser.add_argument("--display", choices=['structure', 'count', 'content', 'all'], default='all', help="Display Directory Structure, Directory File Count, Files Content, or all")
     args = parser.parse_args()
 
     directory = args.path if os.path.isdir(args.path) else os.path.dirname(args.path)
@@ -110,38 +111,40 @@ def main():
         exclude_patterns = [pattern.replace("\\", "\\\\") for pattern in args.exclude]  # Escape backslashes
         if exclude_patterns:
             logger.info(f"Exclude patterns: {', '.join(exclude_patterns)}")
-        
-        last_folder_name = os.path.basename(os.path.normpath(args.path))
-        logger.info(f"Generating directory structure for {args.path}")
-        directory_structure = f"{last_folder_name}/\n" + generate_directory_structure(args.path, exclude_patterns, "    ")
-        output += "Directory Structure:\n\n"
-        output += directory_structure
 
-        if args.file_names:
+        if args.display in ['structure', 'all']:
+            last_folder_name = os.path.basename(os.path.normpath(args.path))
+            logger.info(f"Generating directory structure for {args.path}")
+            directory_structure = f"{last_folder_name}/\n" + generate_directory_structure(args.path, exclude_patterns, "    ")
+            output += "Directory Structure:\n\n"
+            output += directory_structure
+
+        if args.display in ['content', 'all'] and args.file_names:
             logger.info("Reading files with specified names or extensions")
             file_content = read_files_with_names_or_extensions(args.path, args.file_names, exclude_patterns)
             output += "\nFiles Content:\n"
             output += file_content
 
-        dir_file_count = []
-        for root, dirs, files in os.walk(args.path):
-            # Check if directory matches exclude patterns
-            dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
-            for d in dirs:
-                dir_path = os.path.join(root, d)
-                file_count = count_files_in_directory(dir_path, exclude_patterns)
-                dir_file_count.append((dir_path, file_count))
+        if args.display in ['count', 'all']:
+            dir_file_count = []
+            for root, dirs, files in os.walk(args.path):
+                # Check if directory matches exclude patterns
+                dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
+                for d in dirs:
+                    dir_path = os.path.join(root, d)
+                    file_count = count_files_in_directory(dir_path, exclude_patterns)
+                    dir_file_count.append((dir_path, file_count))
 
-        dir_file_count.sort(key=lambda x: x[1], reverse=True)
+            dir_file_count.sort(key=lambda x: x[1], reverse=True)
 
-        table = PrettyTable(["File Count", "Directory"])
-        table.align["File Count"] = "l"
-        table.align["Directory"] = "l"
-        for dir_path, file_count in dir_file_count:
-            table.add_row([file_count, dir_path])
+            table = PrettyTable(["File Count", "Directory"])
+            table.align["File Count"] = "l"
+            table.align["Directory"] = "l"
+            for dir_path, file_count in dir_file_count:
+                table.add_row([file_count, dir_path])
 
-        output += "\nDirectory File Count:\n\n"
-        output += str(table)
+            output += "\nDirectory File Count:\n\n"
+            output += str(table)
 
         if args.output_file is not None:
             if args.output_file == "":
