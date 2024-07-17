@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 from prettytable import PrettyTable
 
+
 def setup_logging(log_file, directory, log_level):
     if log_file == "":
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
