@@ -80,6 +80,21 @@ def read_files_with_names_or_extensions(base_path, names_or_extensions, exclude_
     return content
 
 def main():
+    """
+    Generate directory structure.
+
+    Args:
+        --path (str): Path to the directory.
+        --exclude (list): List of patterns to exclude directories/files.
+        --file-names (list): List of specific file names or extensions to include content from.
+        --log-file (str, optional): File to save log to, if not specified logs to console, if specified but empty logs to default file in the parsed directory.
+        --log-level (str): Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+        --output-file (str, optional): File to save output to, if specified but empty saves to default file in the parsed directory.
+        --display (str): Display Directory Structure, Directory File Count, Files Content, or all.
+
+    Returns:
+        None
+    """
     parser = argparse.ArgumentParser(description="Generate directory structure")
     parser.add_argument("--path", required=True, help="Path to the directory")
     parser.add_argument("--exclude", nargs='*', default=[], help="List of patterns to exclude directories/files")
