@@ -1,10 +1,9 @@
 import os
 import argparse
-import re
+import fnmatch
 import logging
 from datetime import datetime
 from prettytable import PrettyTable
-
 
 def setup_logging(log_file, directory, log_level):
     if log_file == "":
@@ -21,11 +20,24 @@ def setup_logging(log_file, directory, log_level):
     logger = logging.getLogger(__name__)
     return logger
 
+def match_pattern(patterns, name):
+    """Проверяет, соответствует ли имя файла одному из паттернов.
+    Если паттерн содержит '*', используем fnmatch для сопоставления.
+    Если нет — проверяем на точное совпадение."""
+    for pattern in patterns:
+        if '*' in pattern:
+            if fnmatch.fnmatch(name, pattern):
+                return True
+        else:
+            if os.path.basename(name) == pattern:
+                return True
+    return False
+
 def count_files_in_directory(path, exclude_patterns):
     count = 0
     for root, dirs, files in os.walk(path):
-        dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
-        files = [f for f in files if not any(re.search(f"^{pattern}$", os.path.join(root, f)) for pattern in exclude_patterns)]
+        dirs[:] = [d for d in dirs if not match_pattern(exclude_patterns, os.path.join(root, d))]
+        files = [f for f in files if not match_pattern(exclude_patterns, os.path.join(root, f))]
         count += len(files)
     logger.debug(f"Counted {count} files in {path}")
     return count
@@ -35,7 +47,7 @@ def generate_directory_structure(path, exclude_patterns, indent="", is_last=True
     items = sorted(os.listdir(path))
     for index, item in enumerate(items):
         item_path = os.path.join(path, item)
-        if any(re.search(f"^{pattern}$", item_path) for pattern in exclude_patterns):
+        if match_pattern(exclude_patterns, item_path):
             logger.debug(f"Excluded {item_path}")
             continue
         connector = "└── " if index == len(items) - 1 else "├── "
@@ -51,12 +63,12 @@ def generate_directory_structure(path, exclude_patterns, indent="", is_last=True
 def read_files_with_names_or_extensions(base_path, names_or_extensions, exclude_patterns):
     content = ""
     for root, dirs, files in os.walk(base_path):
-        dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
+        dirs[:] = [d for d in dirs if not match_pattern(exclude_patterns, os.path.join(root, d))]
         for file in files:
             file_path = os.path.join(root, file)
-            if not any(re.search(f"^{pattern}$", file_path) for pattern in exclude_patterns):
+            if not match_pattern(exclude_patterns, file_path):
                 if names_or_extensions:
-                    if any(file == name for name in names_or_extensions) or any(file.endswith(ext) for ext in names_or_extensions):
+                    if match_pattern(names_or_extensions, file):
                         try:
                             with open(file_path, 'r', encoding='utf-8') as f:
                                 relative_path = os.path.relpath(file_path, base_path)
@@ -65,21 +77,12 @@ def read_files_with_names_or_extensions(base_path, names_or_extensions, exclude_
                                 content += f.read() + "\n"
                         except Exception as e:
                             logger.error(f"Failed to read {file_path}: {e}")
-                else:
-                    try:
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            relative_path = os.path.relpath(file_path, base_path)
-                            logger.debug(f"Reading content of {file_path}")
-                            content += f"\n{'='*40}\nContent of {relative_path}:\n{'='*40}\n"
-                            content += f.read() + "\n"
-                    except Exception as e:
-                        logger.error(f"Failed to read {file_path}: {e}")
     return content
 
 def main():
     parser = argparse.ArgumentParser(description="Generate directory structure")
     parser.add_argument("--path", required=True, help="Path to the directory")
-    parser.add_argument("--exclude", nargs='*', default=[], help="List of regex patterns to exclude directories/files")
+    parser.add_argument("--exclude", nargs='*', default=[], help="List of patterns to exclude directories/files")
     parser.add_argument("--file-names", nargs='*', default=[], help="List of specific file names or extensions to include content from")
     parser.add_argument("--log-file", nargs='?', const="", help="File to save log to, if not specified logs to console, if specified but empty logs to default file in the parsed directory")
     parser.add_argument("--log-level", default="INFO", help="Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)")
@@ -109,9 +112,7 @@ def main():
     output = ""
 
     try:
-        exclude_patterns = [pattern.replace("\\", "\\\\") for pattern in args.exclude]  # Escape backslashes
-        if exclude_patterns:
-            logger.info(f"Exclude patterns: {', '.join(exclude_patterns)}")
+        exclude_patterns = args.exclude
 
         if args.display in ['structure', 'all']:
             last_folder_name = os.path.basename(os.path.normpath(args.path))
@@ -129,8 +130,7 @@ def main():
         if args.display in ['count', 'all']:
             dir_file_count = []
             for root, dirs, files in os.walk(args.path):
-                # Check if directory matches exclude patterns
-                dirs[:] = [d for d in dirs if not any(re.search(f"^{pattern}$", os.path.join(root, d)) for pattern in exclude_patterns)]
+                dirs[:] = [d for d in dirs if not match_pattern(exclude_patterns, os.path.join(root, d))]
                 for d in dirs:
                     dir_path = os.path.join(root, d)
                     file_count = count_files_in_directory(dir_path, exclude_patterns)
