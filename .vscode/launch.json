@@ -1,0 +1,117 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+
+      {
+          "name": "Basic Directory Structure",
+          "type": "debugpy",
+
+          "request": "launch",
+          "program": "${workspaceFolder}/main.py",
+          "args": [
+              "--path", "${workspaceFolder}",
+              "--display", "structure"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      },
+      {
+          "name": "Directory Structure with Exclusions",
+          "type": "debugpy",
+          "request": "launch",
+          "program": "${workspaceFolder}/main.py",
+          "args": [
+              "--path", "${workspaceFolder}",
+              "--exclude", "__pycache__", "*.pyc", ".git", ".vscode", ".venv",
+              "--display", "structure"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      },
+      {
+          "name": "File Count Analysis",
+          "type": "debugpy",
+          "request": "launch",
+          "program": "${workspaceFolder}/main.py",
+          "args": [
+              "--path", "${workspaceFolder}",
+              "--exclude", "__pycache__", "*.pyc", ".git", ".venv",
+              "--display", "count"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      },
+      {
+          "name": "Python File Content",
+          "type": "debugpy",
+          "request": "launch",
+          "program": "${workspaceFolder}/main.py",
+          "args": [
+              "--path", "${workspaceFolder}",
+              "--file-names", "*.py",
+              "--exclude", "__pycache__", "*.pyc",".venv",
+              "--display", "content"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      },
+      {
+          "name": "Full Analysis with Log",
+          "type": "debugpy",
+          "request": "launch",
+          "program": "${workspaceFolder}/main.py",
+          "args": [
+              "--path", "${workspaceFolder}",
+              "--exclude", "__pycache__", "*.pyc", ".git", ".vscode",
+              "--file-names", "*.py", "*.txt",
+              "--log-file", "",
+              "--log-level", "DEBUG",
+              "--display", "all"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      },
+      {
+          "name": "Save Output to File",
+          "type": "debugpy",
+          "request": "launch",
+          "program": "${workspaceFolder}/main.py",
+          "args": [
+              "--path", "${workspaceFolder}",
+              "--exclude", "__pycache__", "*.pyc", ".git",
+              "--file-names", "*.py",
+              "--output-file", "${workspaceFolder}/analysis_result.txt",
+              "--display", "all"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      },
+      {
+          "name": "Filter Content with Exclusions",
+          "type": "debugpy",
+          "request": "launch",
+          "program": "${workspaceFolder}/main.py",
+          "args": [
+              "--path", "${workspaceFolder}",
+              "--file-names", "*.py",
+              "--exclude", "__pycache__", "*.pyc",
+              "--exclude-strings", "import", "def ", "class ",
+              "--display", "content"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      },
+      {
+          "name": "Analyze Specific Directory",
+          "type": "debugpy",
+          "request": "launch",
+          "program": "${workspaceFolder}/main.py",
+          "args": [
+              "--path", "${workspaceFolder}/dirstructure/utils",
+              "--display", "all"
+          ],
+          "console": "integratedTerminal",
+          "justMyCode": true
+      }
+  ]
+}
