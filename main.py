@@ -23,6 +23,29 @@ def parse_arguments():
     parser.add_argument("--display", choices=['structure', 'count', 'content', 'all'], default='all', help="Display Directory Structure, Directory File Count, Files Content, or all")
     return parser.parse_args()
 
+
+
+def format_output_header(args):
+    """Create a formatted header for the output."""
+    header = f"""
+DIRECTORY STRUCTURE ANALYSIS REPORT
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Analysis Path: {os.path.abspath(args.path)}
+Display Mode: {args.display}
+"""
+    if args.file_names:
+        header += f"File Patterns: {', '.join(args.file_names)}\n"
+    if args.exclude:
+        header += f"Excluded Patterns: {', '.join(args.exclude)}\n"
+    if args.exclude_strings:
+        header += f"Content Filters: {', '.join(args.exclude_strings)}\n"
+    
+    header += f"\n"
+    return header
+
+def format_section_divider(title):
+    """Create a formatted section divider."""
+    return f"\n\n{title.upper()}\n"
 def main():
     """
     Main function to run the directory structure analyzer.
@@ -49,7 +72,7 @@ def main():
             print(f"Please check the log file at {os.path.abspath(log_file)} for more details.")
         return
 
-    output = ""
+    output = format_output_header(args)
     processed_files = []
 
     try:
@@ -61,14 +84,14 @@ def main():
             last_folder_name = os.path.basename(os.path.normpath(args.path))
             logger.info(f"Generating directory structure for {args.path}")
             directory_structure = f"{last_folder_name}/\n" + generate_directory_structure(args.path, exclude_patterns, "    ", logger=logger)
-            output += "Directory Structure:\n\n"
+            output += format_section_divider("Directory Structure")
             output += directory_structure
 
         # Read file contents if requested
         if args.display in ['content', 'all'] and args.file_names:
             logger.info("Reading files with specified names or extensions")
             file_content, processed_files = read_files_with_names_or_extensions(args.path, args.file_names, exclude_patterns, exclude_strings, logger)
-            output += "\nFiles Content:\n"
+            output += format_section_divider("Files Content")
             output += file_content
 
         # Count files in directories if requested
@@ -86,7 +109,7 @@ def main():
 
             dir_file_count.sort(key=lambda x: x[1], reverse=True)
             table = create_directory_count_table(dir_file_count)
-            output += f"\nDirectory File Count: {total_files}\n\n"
+            output += format_section_divider(f"Directory File Count (Total: {total_files})")
             output += str(table) + "\n"
 
         # Generate character counts for processed files if in 'all' mode
@@ -97,12 +120,13 @@ def main():
                 file_char_counts.sort(key=lambda x: x[0], reverse=True)
 
                 table = create_character_count_table(file_char_counts)
-                output += f"\nFile Character Counts: {total_chars} characters\n\n"
+                output += format_section_divider(f"File Character Counts (Total: {total_chars:,} characters)")
                 output += str(table)
             else:
                 logger.info("No files processed for character counts.")
-                output += "\nFile Character Counts:\n\nNo files matched the specified file names or extensions."
-
+                output += format_section_divider("File Character Counts")
+                output += "\nNo files matched the specified file names or extensions."
+        output += f"\nANALYSIS COMPLETED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         # Save output to file if requested
         if args.output_file is not None:
             if args.output_file == "":
